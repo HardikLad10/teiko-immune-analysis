@@ -406,3 +406,48 @@ this.
 
 Costs: the allowlist needs updating if a real new treatment ever enters the
 data. One line.
+
+---
+
+## D-020 · Bob's framing is the question, not the answer
+Date: 2026-09-05 · Planning · Status: accepted
+
+Chose: state in the spec that the brief's point of view supplies the context
+and not the conclusion, and report what the data shows even where it
+contradicts the premise of the question.
+
+Because: the brief asks for statistics "to convince Yah of Bob's findings",
+which assumes findings exist. The three shortcuts identified in D-006 and D-007
+each produce exactly the confirmatory result that sentence invites — drop the
+correction and cd4_t_cell reads as significant at 0.0133, use a t-test and it
+reads as 0.005, pool the non-independent samples and the baseline null result
+at p = 0.796 disappears. Stacked, they manufacture a biomarker. The leading
+framing and the statistical traps are one trap, and a submission can fall into
+it while doing everything else correctly.
+
+Rejected: treating this as an unwritten understanding between the people
+working on it. Every other guard in this project is written down and tested;
+this one is more consequential than most.
+
+Costs: the README has to argue for a negative result, which is harder to write
+than a positive one.
+
+---
+
+## D-021 · `populations` carries an `ordinal` column
+Date: 2026-09-05 · Planning · Status: accepted, extends D-016
+
+Chose: add `ordinal INTEGER NOT NULL UNIQUE` to `populations` and sort by it in
+SQL.
+
+Because: the required display order is b_cell, cd8_t_cell, cd4_t_cell,
+nk_cell, monocyte, which is not alphabetical. Without a sort key, SQL returns
+b_cell, cd4_t_cell, cd8_t_cell, monocyte, nk_cell, and the two CD populations
+swap. Every table and every figure needs the same order, so it belongs in one
+place.
+
+Rejected: ordering in Python with a categorical type or an explicit list, which
+works but repeats the order at each call site — the summary table, both
+figures, the statistics table, and the dashboard.
+
+Costs: one more column, and the loader has to supply it.

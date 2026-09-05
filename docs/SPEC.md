@@ -25,6 +25,33 @@ README explains the schema and links to a hosted copy of the dashboard.
 Nothing is done on the strength of an argument. Each part below names the
 command that proves it.
 
+### Whose claim is being tested
+
+The brief is written from Bob's point of view, and it leads. It asks for
+statistics "to convince Yah of Bob's findings" — a sentence that presupposes
+the findings exist.
+
+They do not. Section 8 has the numbers.
+
+Bob's framing supplies the question: which cohort, which drug, which
+comparison, and what decision he is trying to make. That context is essential
+and the project keeps all of it. His framing does not supply the answer. Every
+analysis here reports what the data shows, including where that contradicts the
+premise of the question being asked.
+
+This is not a stylistic preference. The three shortcuts listed in section 8 —
+skipping the correction, using a t-test, treating three samples per subject as
+independent — each produce the confirmatory result the brief invites. Stack all
+three and you get a confident p = 0.005 biomarker that is not there. The
+leading framing and the statistical traps are the same trap, and the path of
+least resistance runs straight through both.
+
+The honest answer has real structure and serves Bob better than a false
+positive would: at baseline the groups are indistinguishable, a weak signal
+appears only after dosing, and nothing clears significance at any timepoint. He
+asked for something that predicts response. The deliverable tells him he does
+not have one, and shows the work that rules it out.
+
 ---
 
 ## 2. The data as it is
@@ -110,7 +137,8 @@ CREATE TABLE projects (
 
 CREATE TABLE populations (
     population   TEXT PRIMARY KEY,   -- b_cell, cd8_t_cell, ...
-    display_name TEXT NOT NULL       -- "B cell", "CD8+ T cell", ...
+    display_name TEXT NOT NULL,      -- "B cell", "CD8+ T cell", ...
+    ordinal      INTEGER NOT NULL UNIQUE   -- fixed display order, 1 to 5
 );
 
 CREATE TABLE subjects (
@@ -197,7 +225,9 @@ every query naming columns.
 
 **`populations` is a lookup table.** It gives referential integrity on
 population names and carries display labels, so charts read "CD8+ T cell"
-without the presentation layer hardcoding a mapping.
+without the presentation layer hardcoding a mapping. It also carries `ordinal`,
+because the fixed order in section 2 is not alphabetical and every table and
+figure must use it. Sorting happens in SQL, not in five separate call sites.
 
 **Blank responses become `NULL`.** The 1,422 healthy subjects have no outcome.
 `NULL` keeps them out of `response = 'yes'` and `response = 'no'` alike, which
