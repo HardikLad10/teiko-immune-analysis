@@ -824,3 +824,23 @@ test.
 Costs: one extra output file, `dashboard_metrics.csv`. Plot titles follow
 the `significant` flag, so a future significant hit changes the figure
 text.
+
+---
+
+## D-034 · Conclusion uses subject means; pooled tests stay exploratory
+Date: 2026-09-05 · Review · Status: accepted, qualifies D-007
+
+Chose: keep the pooled Mann-Whitney table, `significant` column, and
+boxplots. Label those tests exploratory. The written conclusion (README,
+dashboard banner, `part4_answers.md`) uses `q_value_subject_means`.
+
+Because: each subject contributes three samples. Mann-Whitney assumes
+independent rows. The yes/no answer does not change (subject-mean
+smallest q ≈ 0.062). A reviewer who checks assumptions should see the
+independent test as the claim, not the 1,968-row test.
+
+Rejected: changing the `significant` column (would break the D-007 tests
+for a label). Rejected adding a mixed model.
+
+Costs: the CSV flag and the prose conclusion answer slightly different
+questions. The README says so.

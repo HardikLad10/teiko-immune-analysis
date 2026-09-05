@@ -14,7 +14,7 @@ from teiko.display import (
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def _stats(*, p_cd4, q_cd4, significant_cd4, p_welch=0.01):
+def _stats(*, p_cd4, q_cd4, significant_cd4, p_welch=0.01, q_subject=0.2):
     return pd.DataFrame(
         {
             "population": ["b_cell", "cd4_t_cell"],
@@ -22,6 +22,7 @@ def _stats(*, p_cd4, q_cd4, significant_cd4, p_welch=0.01):
             "q_value": [0.4, q_cd4],
             "significant": [False, significant_cd4],
             "p_value_welch": [0.3, p_welch],
+            "q_value_subject_means": [0.4, q_subject],
         }
     )
 
@@ -35,7 +36,9 @@ def test_response_banner_uses_table_p_and_q():
 
 def test_response_banner_changes_when_the_table_changes():
     quiet = response_banner(_stats(p_cd4=0.4, q_cd4=0.8, significant_cd4=False))
-    loud = response_banner(_stats(p_cd4=0.001, q_cd4=0.01, significant_cd4=True))
+    loud = response_banner(
+        _stats(p_cd4=0.001, q_cd4=0.01, significant_cd4=True, q_subject=0.01)
+    )
     assert quiet != loud
     assert "0.001" in loud
     assert "cd4_t_cell" in loud

@@ -38,33 +38,40 @@ def read_dashboard_metrics(outputs_dir: Path) -> dict:
 
 
 def response_banner(table: pd.DataFrame) -> str:
-    hits = table.loc[table["significant"], "population"].tolist()
-    if hits:
+    if "q_value_subject_means" in table.columns:
+        subject_hits = table.loc[
+            table["q_value_subject_means"] < 0.05, "population"
+        ].tolist()
+        qmin = float(table["q_value_subject_means"].min())
+    else:
+        subject_hits = []
+        qmin = None
+
+    if subject_hits:
         lead = (
-            "Significant after Benjamini-Hochberg on the headline "
-            f"Mann-Whitney tests: {', '.join(hits)}."
+            "Conclusion (one mean per subject): significant after "
+            f"Benjamini-Hochberg: {', '.join(subject_hits)}."
         )
     else:
         lead = (
-            "No population differs significantly on the headline "
-            "Mann-Whitney test after Benjamini-Hochberg correction across "
-            "the five populations."
+            "Conclusion (one mean per subject): no population differs "
+            "significantly after Benjamini-Hochberg across the five "
+            "populations."
         )
+        if qmin is not None:
+            lead += f" Smallest subject-mean q = {qmin:.4f}."
+
     indexed = table.set_index("population")
     extra = ""
     if "cd4_t_cell" in indexed.index:
         cd4 = indexed.loc["cd4_t_cell"]
         extra = (
-            f" CD4 T cells: p = {float(cd4['p_value']):.4f}, "
-            f"q = {float(cd4['q_value']):.4f}. Welch p on the same pooled "
-            f"rows is {float(cd4['p_value_welch']):.4f}; that is a different "
-            "test and is not the headline."
+            f" Pooled-sample tests are exploratory (three rows per subject; "
+            f"independence is not met). CD4 pooled Mann-Whitney p = "
+            f"{float(cd4['p_value']):.4f}, q = {float(cd4['q_value']):.4f}. "
+            f"Welch p on those rows is {float(cd4['p_value_welch']):.4f}."
         )
-    return (
-        f"{lead}{extra} The headline uses every sample in the cohort, so "
-        "the same subject appears three times. Subject-mean and baseline "
-        "columns in the table are the checks for that."
-    )
+    return lead + extra
 
 
 def timepoint_correction_note() -> str:
@@ -78,12 +85,12 @@ def responder_figure_title(table: pd.DataFrame) -> str:
     hits = table.loc[table["significant"], "population"].tolist()
     if hits:
         return (
-            "Melanoma, miraclib, PBMC — significant after correction: "
-            + ", ".join(hits)
+            "Exploratory pooled samples — melanoma, miraclib, PBMC — "
+            "significant after correction: " + ", ".join(hits)
         )
     return (
-        "Melanoma, miraclib, PBMC — no population differs significantly "
-        "after correction"
+        "Exploratory pooled samples — melanoma, miraclib, PBMC — "
+        "no population differs significantly after correction"
     )
 
 

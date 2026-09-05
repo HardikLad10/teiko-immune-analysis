@@ -19,4 +19,4 @@ no PBMC restriction and no treatment restriction.
 
 ## Part 3 conclusion
 
-No cell population differs significantly between responders and non-responders after correction.
+Conclusion uses one mean per subject. No population differs significantly after Benjamini-Hochberg (smallest q = 0.0621). Pooled-sample tests are exploratory: each subject contributes three samples, so those rows are not independent.

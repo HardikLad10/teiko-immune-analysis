@@ -24,12 +24,20 @@ def write_answers(breakdowns, n_samples, cohort_b_n, cohort_b_mean, stats_table)
     project_line = ", ".join(
         f"{row.category} {row.count}" for row in projects.itertuples()
     )
-    significant = stats_table[stats_table["significant"]]["population"].tolist()
+    subject_hits = stats_table.loc[
+        stats_table["q_value_subject_means"] < 0.05, "population"
+    ].tolist()
+    qmin = float(stats_table["q_value_subject_means"].min())
     verdict = (
-        "No cell population differs significantly between responders and "
-        "non-responders after correction."
-        if not significant
-        else f"Significant after correction: {', '.join(significant)}."
+        "Conclusion uses one mean per subject. No population differs "
+        f"significantly after Benjamini-Hochberg (smallest q = {qmin:.4f}). "
+        "Pooled-sample tests are exploratory: each subject contributes "
+        "three samples, so those rows are not independent."
+        if not subject_hits
+        else (
+            "Conclusion uses one mean per subject. Significant after "
+            f"Benjamini-Hochberg: {', '.join(subject_hits)}."
+        )
     )
 
     text = f"""# Part 4 answers

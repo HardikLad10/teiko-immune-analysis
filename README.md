@@ -189,24 +189,27 @@ non-responders) and 1,968 samples (993 / 975).
 
 Method: two-sided Mann-Whitney U on relative frequency, Benjamini-Hochberg
 across the five populations, Cliff's delta as the **effect size** (how
-different the groups are). The headline uses all 1,968 samples, which is
-what the brief’s frequency table is. Those rows are not independent: each
-subject appears three times. Two extra columns repeat the same test on
-per-subject means and on day 0 only. A Welch t-test on the pooled rows is
-also stored. Welch is not the primary test (the frequencies are skewed).
-After Benjamini-Hochberg, the five Welch p-values do not all stay above
-0.05: CD4 Welch q is about 0.025. The headline significance flag still
-comes from Mann-Whitney (D-007).
+different the groups are). The brief’s frequency table is one row per
+sample (1,968 rows). Those rows are not independent: each subject appears
+three times. The **conclusion** therefore uses the already-computed
+per-subject means (656 independent observations). The pooled-sample tests
+and boxplots stay in the output as exploratory description of the same
+table. A day-0-only column is the slice that a pre-treatment question
+needs. A Welch t-test on the pooled rows is also stored; it is not the
+conclusion (the frequencies are skewed, and the rows are still repeated
+subjects). After Benjamini-Hochberg, CD4 Welch q on the pooled rows is
+about 0.025.
 
-**No population differs significantly after Benjamini-Hochberg on the
-headline Mann-Whitney tests.** Subject-mean CD4 q is about 0.062. At
-baseline, every corrected q is about 0.885.
+**Conclusion (one mean per subject):** no population differs significantly
+after Benjamini-Hochberg. Smallest subject-mean q is about 0.062 (CD4).
+At baseline, every corrected q is about 0.885.
 
-The headline CD4 Mann-Whitney p is about 0.0133; after correction that is
-q about 0.0667. A Welch t-test on the same pooled rows gives p about
-0.005. Those are different hypotheses. The primary test is Mann-Whitney
-because nine of ten group-by-population distributions in this cohort
-reject normality.
+The exploratory pooled CD4 Mann-Whitney p is about 0.0133; after
+correction that is q about 0.0667. A Welch t-test on those same pooled
+rows gives p about 0.005. Those are different hypotheses. The
+`significant` column in `responder_comparison.csv` still flags the pooled
+Mann-Whitney q (D-007). The prose conclusion uses the subject-mean
+column.
 
 A B cell median shift appears after day 0. It is never significant under
 the within-day correction. That correction is five tests per timepoint,
