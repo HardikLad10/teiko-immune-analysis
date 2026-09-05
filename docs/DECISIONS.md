@@ -844,3 +844,18 @@ for a label). Rejected adding a mixed model.
 
 Costs: the CSV flag and the prose conclusion answer slightly different
 questions. The README says so.
+
+---
+
+## D-035 · Spec sections that conflict with the README are marked superseded
+Date: 2026-09-05 · Review · Status: accepted
+
+Chose: keep the old SPEC §8 conclusion text as historical, with a
+superseded note pointing at the README and D-034. Fix the README
+frequency-table wording to “one row per sample per population.”
+
+Because: the README is what a grader reads first. Rewriting the whole
+spec would hide the paper trail.
+
+Rejected: deleting the old paragraphs. They record what we planned
+before the review pass.

@@ -190,7 +190,8 @@ non-responders) and 1,968 samples (993 / 975).
 Method: two-sided Mann-Whitney U on relative frequency, Benjamini-Hochberg
 across the five populations, Cliff's delta as the **effect size** (how
 different the groups are). The brief’s frequency table is one row per
-sample (1,968 rows). Those rows are not independent: each subject appears
+sample per population (1,968 samples, 9,840 frequency rows). Those rows
+are not independent: each subject appears
 three times. The **conclusion** therefore uses the already-computed
 per-subject means (656 independent observations). The pooled-sample tests
 and boxplots stay in the output as exploratory description of the same

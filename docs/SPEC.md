@@ -47,10 +47,11 @@ leading framing and the statistical traps are the same trap, and the path of
 least resistance runs straight through both.
 
 The honest answer has real structure and serves Bob better than a false
-positive would: at baseline the groups are indistinguishable, a weak signal
-appears only after dosing, and nothing clears significance at any timepoint. He
-asked for something that predicts response. The deliverable tells him he does
-not have one, and shows the work that rules it out.
+positive would: after correction, nothing is significant on the
+subject-mean tests or at baseline. He asked about a pre-treatment signal.
+Day 0 is the slice that question needs. The tests do not prove he has a
+predictor, and they do not prove none exists. The README is the
+submission wording.
 
 ---
 
@@ -361,12 +362,18 @@ Bonferroni — the tests are few and related, and BH is the field standard.
 **Cliff's delta** as the effect size, with the conventional magnitude bands:
 below 0.147 negligible, below 0.33 small, below 0.474 medium.
 
-A **Welch t-test** is reported alongside, not as the conclusion but as
-evidence that the conclusion does not hinge on the choice of test.
+A **Welch t-test** is reported alongside. It is not the conclusion.
+Welch BH on the pooled rows does not agree with Mann-Whitney BH (CD4
+Welch q ≈ 0.025). See the README.
 
 ### Unit of analysis
 
-The headline uses all 1,968 samples, which is what the brief describes.
+> **Superseded for the written conclusion (D-034).** The pooled 1,968-sample
+> test stays in the tables and figures as exploratory. The conclusion uses
+> one mean per subject. Details: `README.md` Results.
+
+The exploratory comparison uses all 1,968 samples, which is what the brief
+describes.
 
 Each subject contributes three samples, so those rows are not independent. Two
 sensitivity analyses run alongside on 656 independent observations: one on
@@ -391,7 +398,8 @@ Stacking all three yields a confident p = 0.005 biomarker that is not there.
 
 ### The pattern that is actually present
 
-At baseline the groups are indistinguishable across all five populations —
+At baseline every corrected q is 0.885 (not a formal equivalence test).
+The groups look similar across all five populations —
 every corrected q is 0.885, every effect size under 0.06. After dosing begins,
 a weak difference appears:
 
@@ -405,12 +413,19 @@ For B cells the effect strengthens steadily across the three timepoints. For
 CD4 T cells it peaks at day 7 and eases back at day 14, so it is not a clean
 monotonic trend and will not be described as one.
 
-**The conclusion to report.** Bob asked about predicting response, which
-requires information available before treatment starts. Baseline is exactly
-where this dataset is emptiest. What weak signal exists appears only after
-dosing, which makes it a pharmacodynamic observation — consistent with the drug
-acting on responders — rather than a predictive biomarker that tells Bob whom
-to treat. These five frequencies do not give him a predictor.
+> **Superseded (D-034 and the Codex review pass).** Do not treat the next
+> paragraph as the submission conclusion. The README is the grader-facing
+> account: conclusion = subject-mean BH; pooled tests are exploratory;
+> day 0 is the pre-treatment slice; the tests do not prove equivalence,
+> causation, or the absence of all predictive information.
+
+**The conclusion to report (historical, 2026-09-05 planning).** Bob asked
+about predicting response, which requires information available before
+treatment starts. Baseline is exactly where this dataset is emptiest.
+What weak signal exists appears only after dosing, which makes it a
+pharmacodynamic observation — consistent with the drug acting on
+responders — rather than a predictive biomarker that tells Bob whom to
+treat. These five frequencies do not give him a predictor.
 
 This negative result is the deliverable, not a failure. The code must present
 it as a complete, fully rendered result: effect sizes beside every p-value, raw
