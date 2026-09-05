@@ -521,3 +521,20 @@ CD4 trap visually.
 
 Costs: the figure restates a number that is already in the table. That is
 the point.
+
+---
+
+## D-026 · Empty projects come from a LEFT JOIN, not a patch
+Date: 2026-09-05 · Task 6 · Status: accepted
+
+Chose: count Cohort A samples with a `LEFT JOIN` from `projects`, so a
+project with no matching samples still appears with count 0.
+
+Because: `prj2` contributes zero to this cohort. A plain `GROUP BY` drops
+that row, and a later `if "prj2" not in ...: append 0` is a special case
+that only works because we already looked at the data.
+
+Rejected: grouping then filling missing projects in Python. Same answer
+today, wrong the moment a fourth project appears.
+
+Costs: the join is slightly harder to read than `GROUP BY project`.
