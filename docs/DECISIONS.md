@@ -741,3 +741,23 @@ Rejected: `check_same_thread=False`, which hides the error and can corrupt
 the file.
 
 Costs: one extra `connect()` per rerun. Negligible.
+
+---
+
+## D-030 · Unpin requirements so Cloud can install
+Date: 2026-09-05 · Task 9 · Status: accepted, reverses D-022 for install
+
+Chose: drop the exact pins. `requirements.txt` lists package names only.
+
+Because: Streamlit Cloud is running Python 3.14.7. The 2024 pins have no
+3.14 wheels, so uv "resolves" in half a second and then tries to compile
+scipy from source. That is the oven. Current pandas / numpy / scipy /
+matplotlib all publish 3.14 wheels. The dashboard already reads committed
+outputs; Cloud does not need our laptop's exact versions to show 10206.15.
+
+Rejected: deleting the app again and hunting for a 3.12 dropdown. That is
+what made a one-click host step into a circus. Also rejected a second
+requirements file.
+
+Costs: a Codespace and Cloud may install slightly different versions.
+The tests check direction and pinned answers, not a bit-identical scipy.

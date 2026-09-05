@@ -1,7 +1,8 @@
-# Pinned exactly so a Codespace and a laptop resolve identically.
-pandas==2.2.3
-numpy==2.1.3
-scipy==1.14.1
-matplotlib==3.9.2
-streamlit==1.40.1
-pytest==8.3.3
+# Unpinned so Streamlit Cloud can install wheels for whatever
+# Python it chose (today that is 3.14). Codespaces does the same.
+pandas
+numpy
+scipy
+matplotlib
+streamlit
+pytest
