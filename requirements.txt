@@ -1,5 +1,6 @@
-# Unpinned so Streamlit Cloud can install wheels for whatever
-# Python it chose (today that is 3.14). Codespaces does the same.
+# Unpinned so Streamlit Cloud, Codespaces, and a local install can
+# pick wheels. Tested on Python 3.11 (Codespaces) and 3.12 (laptop and
+# Community Cloud). Do not pin to the 2024 set; those lack newer wheels.
 pandas
 numpy
 scipy

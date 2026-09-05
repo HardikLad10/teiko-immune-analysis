@@ -154,7 +154,13 @@ elif section == "Response analysis":
 
         st.markdown("#### The same comparison at each timepoint")
         st.caption(timepoint_correction_note())
-        st.dataframe(load_csv("timepoint_comparison.csv"), use_container_width=True)
+        timepoint_path = OUTPUTS / "timepoint_comparison.csv"
+        if not timepoint_path.exists():
+            st.error(
+                "outputs/timepoint_comparison.csv is missing. Run `make pipeline`."
+            )
+        else:
+            st.dataframe(load_csv("timepoint_comparison.csv"), use_container_width=True)
         if (OUTPUTS / "boxplots_by_timepoint.png").exists():
             st.image(str(OUTPUTS / "boxplots_by_timepoint.png"))
         else:
