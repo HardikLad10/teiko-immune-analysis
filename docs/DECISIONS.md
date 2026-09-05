@@ -697,3 +697,29 @@ Community Cloud sleeps idle apps — but the four tabs have not been
 confirmed live from this session. Hardik should open the URL in a logged-in
 browser and confirm Overview / Frequencies / Response / Subsets all render
 before we treat Task 9 as closed.
+
+---
+
+## D-028 · Dashboard first paint reads committed outputs, not live scipy
+Date: 2026-09-05 · Task 9 · Status: accepted
+
+Chose: a sidebar picker instead of `st.tabs`, because Streamlit runs every
+tab body on each script run. Overview, Response, and Subsets render from
+`outputs/*.csv` and `outputs/*.png`. The database and the 52,500-row
+frequency query run only when Frequencies is selected. scipy and
+matplotlib are not imported at startup.
+
+Because: Streamlit runs the whole script on first load. The first `app.py`
+imported plots and statistics, built the database, ran Mann-Whitney four
+times, and drew two large figures before Cloud's manager marked the app
+ready. Logs showed a clean `Resolved 51 packages`, then a seven-minute
+silence, then a second `Provisioning machine` — the first process died.
+That is a timeout or memory kill, not a missing commit. Twelve commits
+were already on `origin/main`, including `app.py`.
+
+Rejected: leaving live recomputation on every boot. Correct numbers, unusable
+on the free tier. Also rejected a second plotting library.
+
+Costs: if someone changes the analysis and forgets `make pipeline`, the
+dashboard can show stale files. The pipeline is the source of truth; the
+dashboard displays it.

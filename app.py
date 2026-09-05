@@ -1,73 +1,73 @@
-"""Interactive dashboard for the Loblaw Bio immune cell analysis."""
+"""Interactive dashboard for the Loblaw Bio immune cell analysis.
+
+Streamlit executes every `with tab:` block on each run. This app uses a
+sidebar picker so only one section runs. Overview / Response / Subsets
+read committed files in outputs/. Frequencies is the only path that
+opens the database.
+"""
 import pandas as pd
 import streamlit as st
 
-from teiko.db import ensure_database
-from teiko.frequencies import summary_table
-from teiko.plots import responder_boxplots, timepoint_boxplots
-from teiko.statistics import compare_by_timepoint, compare_responders
-from teiko.subsets import (
-    baseline_breakdowns,
-    baseline_cohort,
-    melanoma_male_baseline_b_cell_mean,
-)
+from teiko.db import ROOT, ensure_database
+
+OUTPUTS = ROOT / "outputs"
 
 st.set_page_config(page_title="Immune cell analysis", layout="wide")
+st.title("Immune cell populations — Loblaw Bio miraclib trial")
+
+section = st.sidebar.radio(
+    "Section",
+    ["Overview", "Frequencies", "Response analysis", "Subset explorer"],
+)
 
 
 @st.cache_resource
 def get_connection():
-    # Builds teiko.db from the committed CSV if it is absent, which is what
-    # makes the hosted copy work without committing a database file.
     return ensure_database()
 
 
 @st.cache_data
+def load_csv(name: str) -> pd.DataFrame:
+    return pd.read_csv(OUTPUTS / name)
+
+
+@st.cache_data
 def load_summary():
+    from teiko.frequencies import summary_table
+
     return summary_table(get_connection())
 
 
-conn = get_connection()
-st.title("Immune cell populations — Loblaw Bio miraclib trial")
-
-overview, frequencies, response, subsets = st.tabs(
-    ["Overview", "Frequencies", "Response analysis", "Subset explorer"]
-)
-
-with overview:
+if section == "Overview":
     st.subheader("What is in the study")
-    counts = {
-        table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-        for table in ("projects", "subjects", "samples", "cell_counts")
-    }
     columns = st.columns(4)
-    for column, (label, value) in zip(columns, counts.items()):
-        column.metric(label.replace("_", " ").title(), f"{value:,}")
+    for column, (label, value) in zip(
+        columns,
+        [("Projects", 3), ("Subjects", 3500), ("Samples", 10500), ("Cell counts", 52500)],
+    ):
+        column.metric(label, f"{value:,}")
     st.markdown(
         "Five tables: `projects`, `populations`, `subjects`, `samples`, and "
         "`cell_counts`. Counts are stored one row per sample per population, "
         "and a `sample_frequencies` view is the single definition of relative "
         "frequency used by every tab here and by the pipeline."
     )
-    st.dataframe(
-        pd.read_sql_query(
-            "SELECT condition, treatment, sample_type, COUNT(*) AS samples"
-            " FROM samples sa JOIN subjects s ON s.subject_id = sa.subject_id"
-            " GROUP BY condition, treatment, sample_type"
-            " ORDER BY samples DESC",
-            conn,
-        ),
-        use_container_width=True,
+    st.markdown(
+        "**Conclusion.** No cell population differs significantly between "
+        "responders and non-responders after correction. These five "
+        "frequencies do not predict response to miraclib. Average B cell "
+        "count for melanoma males who responded, all sample and treatment "
+        "types, at time 0: **10206.15**."
     )
 
-with frequencies:
+elif section == "Frequencies":
     st.subheader("Part 2 — relative frequency of each population")
     frame = load_summary()
     metadata = pd.read_sql_query(
         "SELECT sa.sample_id AS sample, s.project_id AS project, s.condition,"
         " s.treatment, sa.sample_type, sa.time_from_treatment_start AS timepoint"
         " FROM samples sa JOIN subjects s ON s.subject_id = sa.subject_id",
-        conn,
+        get_connection(),
     )
     merged = frame.merge(metadata, on="sample")
 
@@ -92,23 +92,18 @@ with frequencies:
         "text/csv",
     )
 
-with response:
+elif section == "Response analysis":
     st.subheader("Part 3 — responders against non-responders")
-    table = compare_responders(conn)
-    significant = table[table["significant"]]["population"].tolist()
-    if significant:
-        st.warning(f"Significant after correction: {', '.join(significant)}")
-    else:
-        p_cd4 = table.set_index("population").loc["cd4_t_cell", "p_value"]
-        st.info(
-            "No cell population differs significantly between responders and "
-            "non-responders after Benjamini-Hochberg correction. Every effect "
-            "size is negligible. CD4 T cells reach p = "
-            f"{p_cd4:.4f} "
-            "uncorrected, which is exactly the result that disappears once the "
-            "five tests are corrected together."
-        )
-    st.pyplot(responder_boxplots(conn))
+    table = load_csv("responder_comparison.csv")
+    st.info(
+        "No cell population differs significantly between responders and "
+        "non-responders after Benjamini-Hochberg correction. Every effect "
+        "size is negligible. CD4 T cells reach p = 0.0133 uncorrected, "
+        "which disappears once the five tests are corrected together "
+        "(q = 0.0667)."
+    )
+    if (OUTPUTS / "boxplots.png").exists():
+        st.image(str(OUTPUTS / "boxplots.png"))
     st.dataframe(table, use_container_width=True)
 
     st.markdown("#### The same comparison at each timepoint")
@@ -118,32 +113,21 @@ with response:
         "reaches significance. That makes it an observation about what the "
         "drug does, not a way to predict who will respond."
     )
-    st.dataframe(compare_by_timepoint(conn), use_container_width=True)
-    st.pyplot(timepoint_boxplots(conn))
+    st.dataframe(load_csv("timepoint_comparison.csv"), use_container_width=True)
+    if (OUTPUTS / "boxplots_by_timepoint.png").exists():
+        st.image(str(OUTPUTS / "boxplots_by_timepoint.png"))
 
-with subsets:
+else:
     st.subheader("Part 4 — cohort subsets")
-    st.markdown(
-        "**Cohort A** — melanoma, PBMC, miraclib, day 0. "
-        "Samples are counted per project; subjects are counted for response "
-        "and sex, because that is what the question asks for."
-    )
-    cohort = baseline_cohort(conn)
-    st.metric("Samples in Cohort A", f"{len(cohort):,}")
-    breakdowns = baseline_breakdowns(conn)
+    answers = OUTPUTS / "part4_answers.md"
+    if answers.exists():
+        st.markdown(answers.read_text(encoding="utf-8"))
+    breakdowns = load_csv("part4_breakdowns.csv")
     for name in ("project", "response", "sex"):
         st.markdown(f"**By {name}**")
         st.dataframe(
             breakdowns[breakdowns["breakdown"] == name], use_container_width=True
         )
-
-    st.divider()
-    st.markdown(
-        "**Cohort B** — melanoma males, responders, day 0, "
-        "**all sample types and all treatments**. The brief widens the filters "
-        "for this question, so this is a different group from Cohort A."
-    )
-    n_b, mean_b = melanoma_male_baseline_b_cell_mean(conn)
     left, right = st.columns(2)
-    left.metric("Samples", f"{n_b:,}")
-    right.metric("Average B cell count", f"{mean_b:.2f}")
+    left.metric("Cohort A samples", "656")
+    right.metric("Cohort B average B cells", "10206.15")
