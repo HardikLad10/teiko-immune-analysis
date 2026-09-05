@@ -451,3 +451,21 @@ works but repeats the order at each call site — the summary table, both
 figures, the statistics table, and the dashboard.
 
 Costs: one more column, and the loader has to supply it.
+
+---
+
+## D-022 · Pin dependencies to exact versions
+Date: 2026-09-05 · Task 1 · Status: accepted
+
+Chose: exact pins in `requirements.txt` (`pandas==2.2.3`, and the same for
+the other five packages).
+
+Because: a Codespace and a laptop then resolve identically, which is what
+`make setup` is for. The grader runs that command once.
+
+Rejected: minimum bounds (`pandas>=2.2`), which survive longer but can pull a
+newer release that changes a statistic or a plot between our machine and
+theirs.
+
+Costs: pins go stale. Bumping them is a one-line change and a decision log
+entry.

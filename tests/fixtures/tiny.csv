@@ -1,0 +1,3 @@
+project,subject,condition,age,sex,treatment,response,sample,sample_type,time_from_treatment_start,b_cell,cd8_t_cell,cd4_t_cell,nk_cell,monocyte
+prjT,sbjT0,melanoma,60,M,miraclib,yes,sampleT0,PBMC,0,10,20,30,20,20
+prjT,sbjT1,healthy,55,F,none,,sampleT1,WB,0,1,1,1,1,1

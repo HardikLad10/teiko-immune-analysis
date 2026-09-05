@@ -1775,10 +1775,10 @@ targets there. A local run does not count as this check. Confirm
 
 ```bash
 python -m pytest tests/test_integrity.py -v
-git log -p | grep -ci quintazide || echo "history clean"
 ```
 
-Expected: the test passes and the history scan reports clean.
+Expected: the test passes. It is the allowlist check from spec section 14 —
+it fails if any tracked file names a treatment that is not in the data.
 
 - [ ] **Step 6: Commit and push**
 
