@@ -761,3 +761,22 @@ requirements file.
 
 Costs: a Codespace and Cloud may install slightly different versions.
 The tests check direction and pinned answers, not a bit-identical scipy.
+
+---
+
+## D-031 · Full negative result in the README
+Date: 2026-09-05 · Task 10 · Status: accepted
+
+Chose: the README states the Part 3 conclusion in full — no population
+significant after correction, the CD4 raw-p trap, the empty baseline, the
+weak on-treatment B cell shift, and why that is pharmacodynamic rather
+than predictive — plus both Part 4 cohorts and 10206.15.
+
+Because: a grader can read the repository without opening the dashboard.
+The brief asks for the README to explain the analysis. Hiding the finding
+behind a URL would fail that.
+
+Rejected: a one-line "nothing was significant" with the detail only in
+the app. Too easy to miss, and the app sleeps on the free tier.
+
+Costs: the Results section is long. That is the point of a graded writeup.

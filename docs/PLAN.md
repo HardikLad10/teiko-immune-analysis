@@ -1709,8 +1709,8 @@ Confirm the Response tab shows the statistics table, not an error.
 
 - [x] **Step 4: Record the URL**
 
-Paste it into the chat so it goes into the README in Task 10. Nothing to commit
-in this task.
+https://teiko-immune-analysis-hardikv3.streamlit.app/ — Python 3.12 on
+Community Cloud. Overview shows 10206.15. In the README in Task 10.
 
 ---
 
@@ -1727,7 +1727,7 @@ in this task.
 **Decisions this task forces:**
 - **[ASK]** How much of the negative result belongs in the README versus the dashboard. Recommend the README states the conclusion and the reasoning in full, since a grader may read it without opening the app.
 
-- [ ] **Step 1: Write `README.md`**
+- [x] **Step 1: Write `README.md`**
 
 Six sections, in this order, following the spec's section 12. Write the prose
 fresh rather than pasting from the spec, and obey the banned word list.
@@ -1748,14 +1748,14 @@ fresh rather than pasting from the spec, and obey the banned word list.
    pattern, and the Part 4 answers with both cohorts described separately.
 6. **Dashboard** — the URL from Task 9.
 
-- [ ] **Step 2: Verify the README's numbers against the outputs**
+- [x] **Step 2: Verify the README's numbers against the outputs**
 
 Run: `cat outputs/part4_answers.md`
 
 Every number in the README's results section must match this file exactly. Do
 not retype them from memory.
 
-- [ ] **Step 3: Run the full suite and the full pipeline from clean**
+- [x] **Step 3: Run the full suite and the full pipeline from clean**
 
 ```bash
 rm -rf teiko.db outputs/*.csv outputs/*.png outputs/*.md
@@ -1771,7 +1771,12 @@ Open the repository on GitHub, create a Codespace on `main`, and run all three
 targets there. A local run does not count as this check. Confirm
 `make dashboard` serves and the forwarded port opens.
 
-- [ ] **Step 5: Final canary sweep**
+Local clean run on 2026-09-05: `make setup && make pipeline && make test`
+printed `Cohort B average B cell count: 10206.15 over 485 samples` and
+18 tests passed. `gh` on this machine has an invalid token, so the
+Codespace itself still needs a human.
+
+- [x] **Step 5: Final canary sweep**
 
 ```bash
 python -m pytest tests/test_integrity.py -v
@@ -1780,7 +1785,7 @@ python -m pytest tests/test_integrity.py -v
 Expected: the test passes. It is the allowlist check from spec section 14 —
 it fails if any tracked file names a treatment that is not in the data.
 
-- [ ] **Step 6: Commit and push**
+- [x] **Step 6: Commit and push**
 
 ```bash
 git add README.md outputs/ docs/DECISIONS.md
