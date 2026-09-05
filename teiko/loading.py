@@ -48,19 +48,25 @@ def _load(conn, csv_path: Path) -> None:
 
     subjects = {}
     for row in rows:
-        # Verified constant across every subject's three samples, so first wins.
-        subjects.setdefault(
+        # Subject and sample IDs are treated as unique across the file.
+        # This CSV keeps every subject field constant; a clash is an error.
+        record = (
             row["subject"],
-            (
-                row["subject"],
-                row["project"],
-                row["condition"],
-                int(row["age"]),
-                row["sex"],
-                row["treatment"],
-                row["response"] or None,
-            ),
+            row["project"],
+            row["condition"],
+            int(row["age"]),
+            row["sex"],
+            row["treatment"],
+            row["response"] or None,
         )
+        existing = subjects.get(row["subject"])
+        if existing is None:
+            subjects[row["subject"]] = record
+        elif existing != record:
+            raise ValueError(
+                f"subject {row['subject']} has conflicting metadata; "
+                "identifiers are assumed unique across projects"
+            )
     conn.executemany(
         "INSERT INTO subjects"
         " (subject_id, project_id, condition, age, sex, treatment, response)"

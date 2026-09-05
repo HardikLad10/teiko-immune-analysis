@@ -6,6 +6,7 @@ import matplotlib
 matplotlib.use("Agg")  # No display in Codespaces or on Streamlit Cloud.
 import matplotlib.pyplot as plt  # noqa: E402
 
+from teiko.display import responder_figure_title, timepoint_figure_title  # noqa: E402
 from teiko.statistics import (  # noqa: E402
     cohort_frequencies,
     compare_by_timepoint,
@@ -43,11 +44,7 @@ def responder_boxplots(conn: sqlite3.Connection) -> plt.Figure:
         ax.tick_params(axis="x", labelrotation=20)
 
     axes[0].set_ylabel("Relative frequency (%)")
-    fig.suptitle(
-        "Melanoma, miraclib, PBMC — no population differs significantly "
-        "after correction",
-        fontsize=12,
-    )
+    fig.suptitle(responder_figure_title(stats_table.reset_index()), fontsize=12)
     fig.tight_layout()
     return fig
 
@@ -79,10 +76,6 @@ def timepoint_boxplots(conn: sqlite3.Connection) -> plt.Figure:
                          fontsize=9)
         axes[row][0].set_ylabel("Relative frequency (%)")
 
-    fig.suptitle(
-        "By timepoint — groups are indistinguishable at baseline; "
-        "a weak B cell difference appears after dosing",
-        fontsize=12,
-    )
+    fig.suptitle(timepoint_figure_title(), fontsize=12)
     fig.tight_layout()
     return fig

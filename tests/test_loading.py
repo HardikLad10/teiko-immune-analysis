@@ -62,6 +62,20 @@ def test_blank_responses_become_null_and_never_join_a_group(real_db):
     assert nulls + grouped == 3500
 
 
+def test_conflicting_subject_metadata_is_rejected(tmp_path):
+    csv_path = tmp_path / "conflict.csv"
+    csv_path.write_text(
+        "project,subject,condition,age,sex,treatment,response,sample,"
+        "sample_type,time_from_treatment_start,"
+        "b_cell,cd8_t_cell,cd4_t_cell,nk_cell,monocyte\n"
+        "prj1,sbjX,melanoma,60,M,miraclib,yes,s0,PBMC,0,1,1,1,1,1\n"
+        "prj2,sbjX,melanoma,60,M,miraclib,yes,s1,PBMC,7,1,1,1,1,1\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="subject"):
+        build_database(tmp_path / "conflict.db", csv_path)
+
+
 def test_foreign_keys_are_enforced_on_every_connection(tmp_path):
     path = tmp_path / "test.db"
     build_database(path, FIXTURE)

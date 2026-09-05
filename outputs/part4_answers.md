@@ -2,8 +2,7 @@
 
 ## Cohort A — melanoma, PBMC, miraclib, day 0
 
-656 samples from 656 subjects, since each subject contributes
-one baseline sample.
+656 samples from 656 subjects.
 
 - Samples per project: prj1 384, prj2 0, prj3 272.
 - Subjects by response: 331 responders,
@@ -12,8 +11,8 @@ one baseline sample.
 
 ## Cohort B — melanoma males, all sample and treatment types, day 0
 
-The brief widens the filters here: no PBMC restriction and no treatment
-restriction.
+The final question uses a broader cohort than the earlier baseline query:
+no PBMC restriction and no treatment restriction.
 
 - Responder samples: 485.
 - Average B cell count: 10206.15.

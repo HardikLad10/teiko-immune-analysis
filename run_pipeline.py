@@ -3,6 +3,7 @@
 Assumes load_data.py has already built the database. `make pipeline` runs both.
 """
 from teiko.db import ROOT, ensure_database
+from teiko.display import write_dashboard_metrics
 from teiko.frequencies import summary_table
 from teiko.plots import responder_boxplots, timepoint_boxplots
 from teiko.statistics import compare_by_timepoint, compare_responders
@@ -19,6 +20,7 @@ def write_answers(breakdowns, n_samples, cohort_b_n, cohort_b_mean, stats_table)
     projects = breakdowns[breakdowns["breakdown"] == "project"]
     response = breakdowns[breakdowns["breakdown"] == "response"].set_index("category")
     sex = breakdowns[breakdowns["breakdown"] == "sex"].set_index("category")
+    n_subjects = int(response["count"].sum())
     project_line = ", ".join(
         f"{row.category} {row.count}" for row in projects.itertuples()
     )
@@ -34,8 +36,7 @@ def write_answers(breakdowns, n_samples, cohort_b_n, cohort_b_mean, stats_table)
 
 ## Cohort A — melanoma, PBMC, miraclib, day 0
 
-{n_samples} samples from {n_samples} subjects, since each subject contributes
-one baseline sample.
+{n_samples} samples from {n_subjects} subjects.
 
 - Samples per project: {project_line}.
 - Subjects by response: {response.loc['yes', 'count']} responders,
@@ -44,8 +45,8 @@ one baseline sample.
 
 ## Cohort B — melanoma males, all sample and treatment types, day 0
 
-The brief widens the filters here: no PBMC restriction and no treatment
-restriction.
+The final question uses a broader cohort than the earlier baseline query:
+no PBMC restriction and no treatment restriction.
 
 - Responder samples: {cohort_b_n}.
 - Average B cell count: {cohort_b_mean:.2f}.
@@ -87,6 +88,22 @@ def main() -> None:
         breakdowns.to_csv(OUTPUTS / "part4_breakdowns.csv", index=False)
         n_b, mean_b = melanoma_male_baseline_b_cell_mean(conn)
         write_answers(breakdowns, len(cohort), n_b, mean_b, stats_table)
+        counts = {
+            table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+            for table in (
+                "projects",
+                "subjects",
+                "samples",
+                "cell_counts",
+            )
+        }
+        write_dashboard_metrics(
+            OUTPUTS / "dashboard_metrics.csv",
+            counts,
+            cohort_a_samples=len(cohort),
+            cohort_b_samples=n_b,
+            cohort_b_b_cell_mean=mean_b,
+        )
         print(f"part4 files                {len(cohort):>6,} baseline samples")
         print(f"Cohort B average B cell count: {mean_b:.2f} over {n_b} samples")
     finally:

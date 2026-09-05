@@ -93,8 +93,9 @@ Checked directly. The code may rely on these, and tests hold them in place.
 - Every subject-level field — project, condition, age, sex, treatment,
   response, sample_type — is constant across that subject's three samples. No
   subject mixes PBMC and whole blood.
-- `response` is blank on exactly 1,422 rows, precisely the healthy subjects,
-  who also have `treatment = 'none'`. No other column has missing values.
+- `response` is blank on exactly 1,422 rows (474 healthy subjects, three
+  samples each), who also have `treatment = 'none'`. No other column has
+  missing values.
 
 The data is clean and genuinely hierarchical. Normalising it is natural here,
 not imposed on a mess.
@@ -229,7 +230,8 @@ without the presentation layer hardcoding a mapping. It also carries `ordinal`,
 because the fixed order in section 2 is not alphabetical and every table and
 figure must use it. Sorting happens in SQL, not in five separate call sites.
 
-**Blank responses become `NULL`.** The 1,422 healthy subjects have no outcome.
+**Blank responses become `NULL`.** The 474 healthy subjects (1,422 samples)
+have no outcome.
 `NULL` keeps them out of `response = 'yes'` and `response = 'no'` alike, which
 is what unknown should mean.
 

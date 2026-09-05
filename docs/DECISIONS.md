@@ -800,3 +800,27 @@ for a grader who follows the README.
 
 Costs: the preview tab will not open until `make dashboard` is run.
 That is what we want.
+
+---
+
+## D-033 · Codex review pass: derive display, keep D-007, keep allowlist
+Date: 2026-09-05 · Review · Status: accepted
+
+Chose: keep the headline Mann-Whitney on all samples (D-007). Keep the
+treatment-name allowlist (D-019). Read dashboard metrics and p/q sentences
+from `outputs/`. Narrow the README so it does not claim equivalence,
+prediction, or drug action. Fix the 1,422-row / 474-subject slip in the
+spec and the README. Make the Codespace install command fail if pip fails.
+
+Because: an external review found typed answers in `app.py` and several
+README mistakes. Typed answers do not update when the pipeline runs.
+D-007 already stores the independent-sample checks; promoting them to the
+headline would rewrite the spec for the same “not significant” result.
+
+Rejected: live SQL on every dashboard tab (returns the Cloud first-paint
+problem). Rejected dropping the allowlist. Rejected changing the primary
+test.
+
+Costs: one extra output file, `dashboard_metrics.csv`. Plot titles follow
+the `significant` flag, so a future significant hit changes the figure
+text.

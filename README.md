@@ -14,12 +14,14 @@ dashboard.
 
 ## How to run it
 
-Needs Python 3.10 or newer. From the repository root:
+Tested on Python 3.11 (GitHub Codespaces), 3.12 (this laptop), and 3.12
+(Streamlit Community Cloud). `requirements.txt` lists package names without
+pins so those three Pythons can install wheels. From the repository root:
 
 ```bash
 make setup      # install the packages in requirements.txt
 make pipeline   # build teiko.db and write everything in outputs/
-make dashboard  # start the Streamlit app on http://localhost:8501
+make dashboard  # start the Streamlit app
 ```
 
 `make setup` upgrades pip and installs pandas, numpy, scipy, matplotlib,
@@ -29,78 +31,105 @@ packages are already cached.
 `make pipeline` runs `python load_data.py` then `python run_pipeline.py`.
 The first script drops and rebuilds `teiko.db`. The second writes the
 summary table, the responder and timepoint statistics, two boxplot figures,
-and the Part 4 answers. On a laptop this is about a minute. The last line
-should read:
+the Part 4 answers, and `outputs/dashboard_metrics.csv`. On a laptop this
+is about a minute. The last line should read:
 
 ```
 Cohort B average B cell count: 10206.15 over 485 samples
 ```
 
-`make dashboard` serves `app.py`. The first visit after a clean checkout
-builds the database if `teiko.db` is missing, which is the path Streamlit
-Cloud takes. Overview, Response, and Subsets read the committed files in
-`outputs/`. Frequencies queries the database.
+`make dashboard` serves `app.py`. On a laptop, open http://localhost:8501.
 
-`make test` runs the pytest suite. It is not required by the brief, but it
-is how the traps in Parts 3 and 4 stay pinned.
+**GitHub Codespaces.** On github.com open
+`HardikLad10/teiko-immune-analysis`, branch `main`, then Code → Codespaces
+→ Create codespace on main. In that terminal run the same three `make`
+commands. After `make dashboard`, open the forwarded port **8501** in the
+Ports tab (the URL is `*.app.github.dev`, not localhost on your computer).
+The container installs packages on update; `make setup` is still the
+command the grader runs.
+
+Overview, Response, and Subsets read the committed files in `outputs/`.
+Frequencies builds `teiko.db` if it is missing, then queries it. If an
+output file is absent, the app says to run `make pipeline`.
+
+`make test` runs the pytest suite. It is not required by the brief. The
+tests check loading, percentage calculations, statistical utilities, and
+the required subset answers.
 
 ## The schema
 
-Five tables and one view.
+Each project contains subjects. Each subject contributes samples. Each
+sample has one count for each measured population. The `populations` table
+names the cell types. A **view** (a saved SQL query that behaves like a
+table) calculates each count as a percentage of that sample’s measured
+total.
+
+The combination of sample ID and population identifies one measurement, so
+the same pair cannot be stored twice. That does not require every sample
+to contain all five populations; the current loader writes all five. If
+the input later has holes, that needs a check, not a silent smaller panel.
 
 **`projects`** holds one row per project (`prj1`, `prj2`, `prj3`). Today it
-has a single column, `project_id`. That is deliberate. If the company grew
-to hundreds of projects, site, protocol, sponsor, and dates would attach
-here once, not be copied onto every sample.
+has a single column, `project_id`. Extra project facts (site, protocol)
+would attach here once.
 
 **`populations`** is a lookup: `b_cell`, `cd8_t_cell`, `cd4_t_cell`,
-`nk_cell`, `monocyte`, each with a display name and an `ordinal`. The brief
-fixes that order, and it is not alphabetical. Putting the order in the
-table means every chart and every exported table sorts in SQL instead of
-hardcoding the same list in five places. A sixth population would be an
-insert, not an `ALTER TABLE`.
+`nk_cell`, `monocyte`, each with a display name and an **ordinal** (display
+order). That order is this project’s choice so tables stay comparable; the
+brief names the five populations but does not require a presentation
+order. Statistics queries sort by `ordinal`. Charts also keep a label map
+in `teiko/plots.py`, so the lookup table is not the only source of chart
+labels.
+
+The storage model can accept another population as an insert. The loader
+and the plot layout still list five names and would need edits. Adding a
+population also changes the percentage denominator, because `total_count`
+is the sum of the measured panel, not the true tube total. Percentages
+sum to 100 by construction for the populations that are present.
 
 **`subjects`** holds one row per person: project, condition, age, sex,
 treatment, and response. Treatment and response sit here because they are
 constant across all three of a subject's samples in this file. Storing them
 once makes it impossible for the same person to appear as both a responder
 and a non-responder. In a real trial, response is assessed over time and
-would belong on `samples` or in its own table. It is modelled at subject
-level because this dataset makes that true, not because that is always
-right.
+would belong on `samples` or in its own table. Repeated enrollments or a
+change of treatment would also need a richer model.
 
-The 1,422 healthy subjects have a blank response in the CSV. Those become
-SQL `NULL`. `NULL` is in neither `response = 'yes'` nor `response = 'no'`,
-which is what unknown should mean.
+Subject IDs and sample IDs are assumed unique across the whole file, not
+only inside one project. The loader rejects a subject whose project,
+condition, age, sex, treatment, or response is not the same on every row.
+
+The 474 healthy subjects (1,422 samples) have a blank response in the CSV.
+Those become SQL `NULL`. `NULL` is in neither `response = 'yes'` nor
+`response = 'no'`, which is what unknown should mean.
 
 **`samples`** holds one row per draw: the subject, `PBMC` or `WB`, and
 `time_from_treatment_start` (0, 7, or 14).
 
 **`cell_counts`** is long, not wide: one row per sample per population,
 52,500 rows. A wide table with five count columns would need a schema
-change and query edits for every new population. Long form does not.
+change for every new population.
 
-`total_count` is the sum of those five measured populations, not the true
-total cell count of the tube. Percentages are shares of the measured panel.
-They sum to 100 by construction.
+**`sample_frequencies`** is the view over `cell_counts`. It is the only
+SQL definition of relative frequency. The pipeline computes statistics
+from it. The dashboard Overview, Response, and Subsets display the files
+that pipeline wrote; those files can go stale if someone changes the CSV
+and skips `make pipeline`.
 
-**`sample_frequencies`** is a view over `cell_counts`. It is the only
-definition of relative frequency. The pipeline, the statistics, and the
-dashboard all read it. They cannot drift apart.
+A **foreign key** is a rule that a referenced row must exist. Foreign keys
+are declared in `schema.sql` (**DDL**: the SQL that defines tables). SQLite
+leaves them off unless the connection says `PRAGMA foreign_keys = ON`.
+That pragma is issued in `teiko.db.connect` on every open. A test inserts
+a count for a sample that does not exist and checks that it fails.
 
-Foreign keys are declared in `schema.sql`, but SQLite leaves them off
-unless the connection says `PRAGMA foreign_keys = ON`. That pragma is
-issued in `teiko.db.connect` on every open, not once at create time. A
-connection that skipped it would accept orphan rows. A test inserts a
-count for a sample that does not exist and checks that it fails.
-
-How this holds at hundreds of projects and thousands of samples: subject
-facts stay one row per person no matter how many timepoints arrive, so a
-metadata correction is a one-row update. Cohort filters hit `subjects`,
-which stays small. New analytics are new queries against the view, not
-new loader code. `cell_counts` is the only table that grows with both
-samples and populations, and it is the natural place to partition later.
-The same DDL ports to Postgres with almost no change.
+At the scale the brief names — hundreds of projects and thousands of
+samples — this file already has thousands of samples. Subject facts stay
+one row per person as more timepoints arrive, so a metadata correction is
+a one-row update. Cohort filters hit `subjects`. New questions are usually
+new queries; some need new columns or new files. `cell_counts` grows with
+both samples and populations. The table definitions are close to what
+Postgres would use; moving the running system also means connections,
+backups, and how writes are locked. SQLite allows one writer at a time.
 
 The CSV's real column names win over the brief: `sample`, `condition`,
 and `sex`, not `sample_id`, `indication`, or `gender`. The loader reads
@@ -108,8 +137,10 @@ the file, not the prompt.
 
 ## Code structure
 
-Three thin scripts sit at the repository root because the brief names them
-and Codespaces graders run them with no arguments:
+The brief requires `load_data.py` at the root, run as
+`python load_data.py` with no arguments. `run_pipeline.py` and `app.py`
+are the other two entry points this project uses. Codespaces graders run
+the Makefile targets, which call these scripts.
 
 | File | What it does |
 | --- | --- |
@@ -119,7 +150,7 @@ and Codespaces graders run them with no arguments:
 
 The work lives in `teiko/`, imported as `teiko`, not `src.teiko`. A
 `src/` layout would need a package install or a `PYTHONPATH` before
-`python load_data.py` worked. The brief asks for that bare command.
+`python load_data.py` worked.
 
 | Module | What it does |
 | --- | --- |
@@ -129,17 +160,20 @@ The work lives in `teiko/`, imported as `teiko`, not `src.teiko`. A
 | `teiko/statistics.py` | Mann-Whitney U, hand-written Benjamini-Hochberg, Cliff's delta, Welch t-test. |
 | `teiko/subsets.py` | The two Part 4 SQL queries. |
 | `teiko/plots.py` | The two boxplot figures. |
+| `teiko/display.py` | Turns generated tables into dashboard sentences and metric cards. |
 
-`schema.sql` is the DDL and the view. `tests/` pins the load counts, the
-frequency arithmetic, the correction, both Part 4 answers, and an allowlist
-of treatment names so a planted drug that is not in the data cannot sneak
-into a tracked file. `docs/SPEC.md` is the locked contract.
-`docs/DECISIONS.md` is the paper trail of choices.
+`schema.sql` is the DDL and the view. `tests/` checks loading, percentages,
+the correction, both Part 4 answers, and an allowlist of treatment names
+so a name that is not in the data cannot sit in a tracked file.
+`docs/SPEC.md` is the contract. `docs/DECISIONS.md` is the paper trail.
 
-The pipeline and the dashboard call the same functions. The dashboard does
-not reimplement the statistics in Streamlit.
+The pipeline calls the analysis functions and writes `outputs/`. The
+dashboard reads those files for Overview, Response, and Subsets. It does
+not re-run Mann-Whitney on those pages.
 
 ## Results
+
+A **cohort** here is the selected group of samples or subjects.
 
 ### Part 2 — relative frequencies
 
@@ -154,33 +188,40 @@ Cohort: melanoma, miraclib, PBMC only. 656 subjects (331 responders, 325
 non-responders) and 1,968 samples (993 / 975).
 
 Method: two-sided Mann-Whitney U on relative frequency, Benjamini-Hochberg
-across the five populations, Cliff's delta for effect size. A Welch t-test
-and two subject-level checks (per-subject means, baseline only) sit beside
-the headline so the conclusion does not hinge on one test.
+across the five populations, Cliff's delta as the **effect size** (how
+different the groups are). The headline uses all 1,968 samples, which is
+what the brief’s frequency table is. Those rows are not independent: each
+subject appears three times. Two extra columns repeat the same test on
+per-subject means and on day 0 only. A Welch t-test on the pooled rows is
+also stored. Welch is not the primary test (the frequencies are skewed).
+After Benjamini-Hochberg, the five Welch p-values do not all stay above
+0.05: CD4 Welch q is about 0.025. The headline significance flag still
+comes from Mann-Whitney (D-007).
 
-**No population differs significantly after correction.** That is the
-finding, not a failed search for a biomarker.
+**No population differs significantly after Benjamini-Hochberg on the
+headline Mann-Whitney tests.** Subject-mean CD4 q is about 0.062. At
+baseline, every corrected q is about 0.885.
 
-The headline comparison (all 1,968 samples) has one tempting raw p-value:
-CD4 T cells at p ≈ 0.0133. After correction that is q ≈ 0.0667, not
-significant. A Welch t-test on the same rows gives p ≈ 0.005. At baseline,
-where a predictor would have to live, every corrected q is ≈ 0.885 and
-every effect is negligible. Pooling timepoints, skipping the correction,
-and using a t-test as the primary test would invent a CD4 biomarker that
-is not in the data.
+The headline CD4 Mann-Whitney p is about 0.0133; after correction that is
+q about 0.0667. A Welch t-test on the same pooled rows gives p about
+0.005. Those are different hypotheses. The primary test is Mann-Whitney
+because nine of ten group-by-population distributions in this cohort
+reject normality.
 
-A weak B cell shift appears after dosing. It is never significant. The
-smallest corrected q anywhere, across five populations and three
-timepoints, is ≈ 0.072 on day 14. Every Cliff's delta is negligible; the
-largest anywhere is 0.110, below the 0.147 "small" band. At day 0 the B
-cell median difference is +0.03; at day 7 and day 14 it is about −0.73.
-CD4 peaks at day 7 and eases back, so it is not a clean trend.
+A B cell median shift appears after day 0. It is never significant under
+the within-day correction. That correction is five tests per timepoint,
+not fifteen tests in one family. The smallest of those within-day q
+values is about 0.072 on day 14. Every Cliff's delta is in the
+“negligible” band used here (below 0.147); the largest anywhere is 0.110.
+At day 0 the B cell median difference is +0.03; at day 7 and day 14 it is
+about −0.73. CD4 peaks at day 7 and eases back.
 
-Bob asked about predicting response. That needs information available
-before treatment starts. Baseline is where this dataset is emptiest. The
-weak on-treatment movement is a pharmacodynamic observation — consistent
-with the drug acting on people who already responded — not a predictor of
-whom to treat. These five frequencies do not predict response to miraclib.
+Bob asked about a signal that could be used before treatment starts. Day 0
+is the slice that question needs. On that slice, after correction, no
+population meets p < 0.05. These tests do not prove the groups are the
+same, do not prove the drug caused the later movement, and do not prove
+there is no predictive information of any kind. They show no significant
+difference on these five frequencies under the tests above.
 
 Full tables: `outputs/responder_comparison.csv` and
 `outputs/timepoint_comparison.csv`. Figures: `outputs/boxplots.png` and
@@ -188,9 +229,7 @@ Full tables: `outputs/responder_comparison.csv` and
 
 ### Part 4 — subsets
 
-Two different cohorts. The brief switches filters without saying so.
-Carrying Cohort A's PBMC and miraclib restrictions into the last question
-is the easy way to get the wrong number.
+The final question uses a broader cohort than the earlier baseline query.
 
 **Cohort A** — melanoma, PBMC, miraclib, day 0. 656 samples from 656
 subjects.
@@ -203,8 +242,7 @@ subjects.
 `GROUP BY` would drop it.
 
 **Cohort B** — melanoma males who responded, day 0, all sample types and
-all treatments. The brief drops the PBMC and miraclib filters here.
-485 samples. Average raw B cell count: **10206.15**.
+all treatments. 485 samples. Average raw B cell count: **10206.15**.
 
 Raw count, not percentage. Keeping the earlier filters gives a different
 mean on fewer samples.
@@ -213,4 +251,7 @@ mean on fewer samples.
 
 Hosted copy: <https://teiko-immune-analysis-hardikv3.streamlit.app/>
 
-Local copy: `make dashboard`, then open http://localhost:8501.
+Local laptop: `make dashboard`, then open http://localhost:8501.
+
+Codespaces: `make setup`, `make pipeline`, `make dashboard`, then open
+forwarded port 8501.
