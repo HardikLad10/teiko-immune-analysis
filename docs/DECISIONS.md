@@ -487,3 +487,20 @@ from the CSV.
 
 Costs: a concurrent reader during a rebuild would see an empty database for
 a moment. Nothing in this project does that.
+
+---
+
+## D-024 · Benjamini-Hochberg is written by hand
+Date: 2026-09-05 · Task 4 · Status: accepted
+
+Chose: implement the step-up FDR correction in seven lines, rather than call
+`scipy.stats.false_discovery_control`.
+
+Because: the test that pins a known worked example is then testing our code,
+not scipy's. It also avoids a hidden version floor — that function is recent.
+
+Rejected: calling scipy, which is shorter but would make the known-value test
+a no-op.
+
+Costs: we own any off-by-one in the ranking. The known-value test is the
+check on that.
