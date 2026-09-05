@@ -8,7 +8,7 @@ opens the database.
 import pandas as pd
 import streamlit as st
 
-from teiko.db import ROOT, ensure_database
+from teiko.db import ROOT
 
 OUTPUTS = ROOT / "outputs"
 
@@ -22,8 +22,22 @@ section = st.sidebar.radio(
 
 
 @st.cache_resource
+def ensure_db_file() -> str:
+    """Build teiko.db once. Do not cache the connection — sqlite3
+    connections cannot be shared across Streamlit's threads."""
+    from teiko.db import DB_PATH, CSV_PATH
+    from teiko.loading import build_database
+
+    if not DB_PATH.exists():
+        build_database(DB_PATH, CSV_PATH)
+    return str(DB_PATH)
+
+
 def get_connection():
-    return ensure_database()
+    from teiko.db import connect
+    from pathlib import Path
+
+    return connect(Path(ensure_db_file()))
 
 
 @st.cache_data
@@ -35,7 +49,11 @@ def load_csv(name: str) -> pd.DataFrame:
 def load_summary():
     from teiko.frequencies import summary_table
 
-    return summary_table(get_connection())
+    conn = get_connection()
+    try:
+        return summary_table(conn)
+    finally:
+        conn.close()
 
 
 if section == "Overview":
@@ -63,12 +81,16 @@ if section == "Overview":
 elif section == "Frequencies":
     st.subheader("Part 2 — relative frequency of each population")
     frame = load_summary()
-    metadata = pd.read_sql_query(
-        "SELECT sa.sample_id AS sample, s.project_id AS project, s.condition,"
-        " s.treatment, sa.sample_type, sa.time_from_treatment_start AS timepoint"
-        " FROM samples sa JOIN subjects s ON s.subject_id = sa.subject_id",
-        get_connection(),
-    )
+    conn = get_connection()
+    try:
+        metadata = pd.read_sql_query(
+            "SELECT sa.sample_id AS sample, s.project_id AS project, s.condition,"
+            " s.treatment, sa.sample_type, sa.time_from_treatment_start AS timepoint"
+            " FROM samples sa JOIN subjects s ON s.subject_id = sa.subject_id",
+            conn,
+        )
+    finally:
+        conn.close()
     merged = frame.merge(metadata, on="sample")
 
     controls = st.columns(5)

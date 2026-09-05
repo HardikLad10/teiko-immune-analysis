@@ -723,3 +723,21 @@ on the free tier. Also rejected a second plotting library.
 Costs: if someone changes the analysis and forgets `make pipeline`, the
 dashboard can show stale files. The pipeline is the source of truth; the
 dashboard displays it.
+
+---
+
+## D-029 · Do not cache the SQLite connection in Streamlit
+Date: 2026-09-05 · Task 9 · Status: accepted
+
+Chose: cache only the existence of `teiko.db`. Open a fresh connection
+per query and close it.
+
+Because: `@st.cache_resource` on a `sqlite3.Connection` shares one
+connection across Streamlit threads. sqlite3 forbids that. The app can
+boot and then die on Frequencies with "SQLite objects created in a thread
+can only be used in that thread."
+
+Rejected: `check_same_thread=False`, which hides the error and can corrupt
+the file.
+
+Costs: one extra `connect()` per rerun. Negligible.
