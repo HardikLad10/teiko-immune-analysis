@@ -80,3 +80,13 @@ def test_cd4_is_the_trap_and_correction_defuses_it(real_db):
     # Uncorrected this reads as a finding; corrected it does not.
     assert cd4["p_value"] < 0.05
     assert cd4["q_value"] > 0.05
+
+
+def test_both_figures_render_with_five_panels(real_db):
+    from teiko.plots import responder_boxplots, timepoint_boxplots
+
+    main = responder_boxplots(real_db)
+    assert len(main.axes) == 5
+
+    faceted = timepoint_boxplots(real_db)
+    assert len(faceted.axes) == 15  # five populations by three timepoints

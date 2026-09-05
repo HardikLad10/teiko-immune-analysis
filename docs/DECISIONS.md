@@ -504,3 +504,20 @@ a no-op.
 
 Costs: we own any off-by-one in the ranking. The known-value test is the
 check on that.
+
+---
+
+## D-025 · Boxplot panels are annotated with their q-value
+Date: 2026-09-05 · Task 5 · Status: accepted
+
+Chose: print the corrected p-value on each panel of both figures.
+
+Because: two near-identical boxplots are easier to read with the number on
+them than with a separate table the reader has to look up.
+
+Rejected: leaving the figures unlabelled and relying on the CSV. Also
+rejected putting raw p-values on the figure, which would reintroduce the
+CD4 trap visually.
+
+Costs: the figure restates a number that is already in the table. That is
+the point.
