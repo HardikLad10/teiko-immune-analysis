@@ -780,3 +780,23 @@ Rejected: a one-line "nothing was significant" with the detail only in
 the app. Too easy to miss, and the app sleeps on the free tier.
 
 Costs: the Results section is long. That is the point of a graded writeup.
+
+---
+
+## D-032 · Codespace does not start Streamlit on attach
+Date: 2026-09-05 · Task 10 · Status: accepted
+
+Chose: drop `postAttachCommand` from `.devcontainer/devcontainer.json`.
+Packages can still install on update. Port 8501 still forwards. The app
+starts only when someone runs `make dashboard`.
+
+Because: the brief grades `make setup`, `make pipeline`, and
+`make dashboard`. Auto-starting Streamlit is not in the spec. It also
+holds port 8501, so the command the grader is told to run fails with
+"address already in use."
+
+Rejected: leaving the auto-start as a convenience. Nice for us, noisy
+for a grader who follows the README.
+
+Costs: the preview tab will not open until `make dashboard` is run.
+That is what we want.
