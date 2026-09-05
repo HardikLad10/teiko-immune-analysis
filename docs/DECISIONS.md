@@ -469,3 +469,21 @@ theirs.
 
 Costs: pins go stale. Bumping them is a one-line change and a decision log
 entry.
+
+---
+
+## D-023 · Drop and rebuild the database on every load
+Date: 2026-09-05 · Task 2 · Status: accepted
+
+Chose: `schema.sql` drops the view and the five tables, then recreates them,
+so `build_database` always starts from empty.
+
+Because: it is simpler than `INSERT OR REPLACE`, it cannot leave leftover
+rows, and 10,500 samples load in under two seconds.
+
+Rejected: `INSERT OR REPLACE` / upsert, which keeps the file but requires
+every table to have a conflict target and still fails if a sample is removed
+from the CSV.
+
+Costs: a concurrent reader during a rebuild would see an empty database for
+a moment. Nothing in this project does that.
