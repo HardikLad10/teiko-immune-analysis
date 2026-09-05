@@ -538,3 +538,162 @@ Rejected: grouping then filling missing projects in Python. Same answer
 today, wrong the moment a fourth project appears.
 
 Costs: the join is slightly harder to read than `GROUP BY project`.
+
+---
+
+# Implementation outcomes
+
+The entries above are choices. These are what actually happened when the
+code ran. Added because the log is meant to carry both.
+
+---
+
+## Outcome · Task 1 — scaffolding
+Date: 2026-09-05 · Commit: `6444ac6`
+
+Installed the pinned packages into a project virtualenv. The integrity test
+failed first because pytest was not installed, which is the expected red.
+After install it failed again for a real reason: `docs/PLAN.md` still
+contained the planted drug name in a `git log | grep` command. That line
+was rewritten to run the allowlist test instead. The test then passed.
+
+This is the log doing its job: the guard caught a copy of the brief inside
+our own plan.
+
+---
+
+## Outcome · Task 2 — schema and loader
+Date: 2026-09-05 · Commit: `c3b0ec1`
+
+`python load_data.py` written twice, same numbers both times:
+
+| table | rows |
+| --- | --- |
+| projects | 3 |
+| populations | 5 |
+| subjects | 3,500 |
+| samples | 10,500 |
+| cell_counts | 52,500 |
+
+Blank responses: 474 subjects stored as `NULL`, zero empty strings, and
+3,026 subjects in yes/no. 474 + 3,026 = 3,500. Foreign keys reject a
+count row whose sample does not exist. Four tests passed.
+
+---
+
+## Outcome · Task 3 — frequencies
+Date: 2026-09-05 · Commit: `306b0f4`
+
+The view produces 52,500 rows. On the fixture, sampleT0 percentages are
+exactly 10 / 20 / 30 / 20 / 20. On the real data, every sample's five
+percentages sum to 100. Population order is B cell, CD8, CD4, NK,
+monocyte — not alphabetical. Three tests passed.
+
+---
+
+## Outcome · Task 4 — statistics
+Date: 2026-09-05 · Commit: `2e83d8f`
+
+Scipy's Mann-Whitney agrees with the direction we measured by hand during
+planning. Headline table (`outputs/responder_comparison.csv`):
+
+| population | median Δ | p | q | Welch p | significant? |
+| --- | --- | --- | --- | --- | --- |
+| b_cell | −0.36 | 0.0557 | 0.1393 | 0.1712 | no |
+| cd8_t_cell | +0.12 | 0.6391 | 0.6391 | 0.7685 | no |
+| cd4_t_cell | +0.56 | 0.0133 | 0.0667 | **0.0050** | no |
+| nk_cell | −0.29 | 0.1211 | 0.2018 | 0.1926 | no |
+| monocyte | −0.33 | 0.1632 | 0.2039 | 0.4658 | no |
+
+CD4 is the trap: raw p = 0.0133 looks like a finding; Welch p = 0.0050
+looks like a strong finding; q = 0.0667 is not significant. Largest
+absolute Cliff's delta is 0.064, negligible. Six tests passed.
+
+---
+
+## Outcome · Task 5 — plots
+Date: 2026-09-05 · Commit: `ab623f8`
+
+`responder_boxplots` draws 5 panels. `timepoint_boxplots` draws 15
+(5 populations × 3 days). Each panel title includes its q-value. Matplotlib
+printed font-cache warnings in the sandbox; they do not appear in the
+committed PNGs. Seven statistics tests passed including the smoke test.
+
+---
+
+## Outcome · Task 6 — Part 4 subsets
+Date: 2026-09-05 · Commit: `b40f875`
+
+Cohort A: 656 samples, 656 subjects.
+
+- Samples per project: prj1 384, **prj2 0**, prj3 272.
+- Subjects by response: 331 yes, 325 no.
+- Subjects by sex: 344 M, 312 F.
+
+Cohort B (filters widened): 485 samples, average raw B cell count
+**10206.15**. The wrong-filter answer (keeping PBMC and miraclib) is 184
+samples and 10401.28 — the test would fail if those filters came back.
+Three tests passed.
+
+---
+
+## Outcome · Task 7 — pipeline
+Date: 2026-09-05 · Commit: `84d57d3`
+
+`rm -f teiko.db && make pipeline` rebuilt the database and wrote eight
+files into `outputs/`. Last line of the run:
+
+`Cohort B average B cell count: 10206.15 over 485 samples`
+
+Full suite: 18 passed. `outputs/part4_answers.md` restates the same
+numbers in sentences.
+
+---
+
+## Outcome · Task 8 — dashboard
+Date: 2026-09-05 · Commit: `56737d3`
+
+`app.py` has four tabs: Overview, Frequencies, Response analysis, Subset
+explorer. The Frequencies tab has filters. The Response tab is the
+required melanoma / miraclib / PBMC comparison, not a general cohort
+picker — see D-027. The app compiles. `ensure_database` builds a missing
+`.db` from the CSV (10,500 samples), which is the Streamlit Cloud path.
+Tabs were not clicked through in a local browser before this commit.
+
+---
+
+## D-027 · Response tab stays on the required cohort
+Date: 2026-09-05 · Task 8 · Status: accepted
+
+Chose: the dashboard's Response tab runs the melanoma / miraclib / PBMC
+comparison and does not offer dropdowns to change it.
+
+Because: that is the comparison the brief asks for. Extra dropdowns would
+need a parameterised statistics function and would invite a reader to
+treat other slices as equally tested.
+
+Rejected: the spec's earlier line about generalising the cohort. That was
+us adding a tool on top of the exercise. The brief does not ask for it.
+
+Costs: a reviewer cannot switch the dashboard to carcinoma or phauximab
+without changing code. They can still filter the Frequencies tab.
+
+---
+
+## Outcome · Task 9 — hosted dashboard
+Date: 2026-09-05 · Deployed by Hardik
+
+URL: https://teiko-immune-analysis-hardik.streamlit.app/
+
+Source: GitHub repo `HardikLad10/teiko-immune-analysis`, branch `main`,
+entrypoint `app.py`. First load on a cold instance builds `teiko.db` from
+the committed CSV and takes a few seconds.
+
+Checked from here a few minutes after deploy: the page was still on
+Streamlit's "waking up / taking longer than normal" screen. A bare HTTP
+request also redirected to Streamlit's auth hop
+(`share.streamlit.io/-/auth/app?...`). Neither is a code error by itself —
+Community Cloud sleeps idle apps — but the four tabs have not been
+confirmed live from this session. Hardik should open the URL in a logged-in
+browser and confirm Overview / Frequencies / Response / Subsets all render
+before we treat Task 9 as closed.

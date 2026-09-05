@@ -1,6 +1,6 @@
 # Immune Cell Analysis Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a SQLite pipeline and Streamlit dashboard that answer Parts 1 to 4 of the Loblaw Bio exercise, reproducibly, from `make setup && make pipeline && make dashboard`.
 
@@ -66,7 +66,7 @@ Each task lists the decisions it forces, tagged by who resolves them.
 **Decisions this task forces:**
 - **[LOG]** Pin dependencies to exact versions or use minimum bounds. Exact pins are more reproducible in Codespaces; minimum bounds survive longer. Recommend exact pins with a comment saying why.
 
-- [ ] **Step 1: Write the failing integrity test**
+- [x] **Step 1: Write the failing integrity test**
 
 Create `tests/test_integrity.py`:
 
@@ -108,13 +108,13 @@ def test_no_unknown_treatment_names_in_repository():
     assert offenders == {}, f"unknown treatment names found: {offenders}"
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `python -m pytest tests/test_integrity.py -v`
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'pytest'`, because nothing is installed yet.
 
-- [ ] **Step 3: Create `requirements.txt`**
+- [x] **Step 3: Create `requirements.txt`**
 
 ```
 # Pinned exactly so a Codespace and a laptop resolve identically.
@@ -126,7 +126,7 @@ streamlit==1.40.1
 pytest==8.3.3
 ```
 
-- [ ] **Step 4: Create the `Makefile`**
+- [x] **Step 4: Create the `Makefile`**
 
 Use real tab characters for indentation, not spaces.
 
@@ -148,7 +148,7 @@ test:
 	python -m pytest -q
 ```
 
-- [ ] **Step 5: Create `pytest.ini`**
+- [x] **Step 5: Create `pytest.ini`**
 
 ```ini
 [pytest]
@@ -157,7 +157,7 @@ python_files = test_*.py
 addopts = -ra
 ```
 
-- [ ] **Step 6: Create the fixture**
+- [x] **Step 6: Create the fixture**
 
 `tests/fixtures/tiny.csv`. Row one totals 100 cells so percentages are the counts themselves. Row two is a healthy subject with a blank response, which task 2 uses to check `NULL` handling.
 
@@ -167,11 +167,11 @@ prjT,sbjT0,melanoma,60,M,miraclib,yes,sampleT0,PBMC,0,10,20,30,20,20
 prjT,sbjT1,healthy,55,F,none,,sampleT1,WB,0,1,1,1,1,1
 ```
 
-- [ ] **Step 7: Create `tests/__init__.py` and `outputs/.gitkeep`**
+- [x] **Step 7: Create `tests/__init__.py` and `outputs/.gitkeep`**
 
 Both empty files. `outputs/.gitkeep` makes the directory exist in git before any output is written.
 
-- [ ] **Step 8: Add `outputs/` exception to `.gitignore`**
+- [x] **Step 8: Add `outputs/` exception to `.gitignore`**
 
 `outputs/` is committed, so confirm no rule excludes it. Append this comment block to `.gitignore`:
 
@@ -180,13 +180,13 @@ Both empty files. `outputs/.gitkeep` makes the directory exist in git before any
 # Only the database is ignored, since `make pipeline` rebuilds it.
 ```
 
-- [ ] **Step 9: Install and run the test**
+- [x] **Step 9: Install and run the test**
 
 Run: `make setup && python -m pytest tests/test_integrity.py -v`
 
 Expected: PASS, 1 test.
 
-- [ ] **Step 10: Commit and push**
+- [x] **Step 10: Commit and push**
 
 ```bash
 git add requirements.txt Makefile pytest.ini .gitignore outputs/.gitkeep tests/
@@ -215,7 +215,7 @@ git push origin main
 **Decisions this task forces:**
 - **[LOG]** Rebuild the database from scratch on every run, or use `INSERT OR REPLACE`. Recommend dropping and rebuilding: it is simpler, guarantees idempotency, and takes under two seconds for 10,500 rows.
 
-- [ ] **Step 1: Write the failing loader tests**
+- [x] **Step 1: Write the failing loader tests**
 
 Create `tests/test_loading.py`:
 
@@ -296,13 +296,13 @@ def test_foreign_keys_are_enforced_on_every_connection(tmp_path):
     conn.close()
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `python -m pytest tests/test_loading.py -v`
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'teiko'`.
 
-- [ ] **Step 3: Write `schema.sql`**
+- [x] **Step 3: Write `schema.sql`**
 
 ```sql
 DROP VIEW  IF EXISTS sample_frequencies;
@@ -365,7 +365,7 @@ SELECT
 FROM cell_counts cc;
 ```
 
-- [ ] **Step 4: Write `teiko/db.py`**
+- [x] **Step 4: Write `teiko/db.py`**
 
 ```python
 """Database paths, connections, and bootstrap."""
@@ -402,7 +402,7 @@ def ensure_database(
     return connect(db_path)
 ```
 
-- [ ] **Step 5: Write `teiko/loading.py`**
+- [x] **Step 5: Write `teiko/loading.py`**
 
 ```python
 """Load cell-count.csv into the normalised schema."""
@@ -500,7 +500,7 @@ def _load(conn, csv_path: Path) -> None:
     )
 ```
 
-- [ ] **Step 6: Write `load_data.py`**
+- [x] **Step 6: Write `load_data.py`**
 
 ```python
 """Part 1: build teiko.db from cell-count.csv.
@@ -524,13 +524,13 @@ if __name__ == "__main__":
 
 Create an empty `teiko/__init__.py`.
 
-- [ ] **Step 7: Run the tests**
+- [x] **Step 7: Run the tests**
 
 Run: `python -m pytest tests/test_loading.py -v`
 
 Expected: PASS, 4 tests. If `test_blank_responses_become_null_and_never_join_a_group` fails on the count, print the actual number and confirm it equals 1422 divided by 3.
 
-- [ ] **Step 8: Run the script the way the grader will**
+- [x] **Step 8: Run the script the way the grader will**
 
 Run: `python load_data.py`
 
@@ -547,7 +547,7 @@ Built teiko.db from cell-count.csv
 
 Then run it a second time and confirm the numbers are identical.
 
-- [ ] **Step 9: Commit and push**
+- [x] **Step 9: Commit and push**
 
 ```bash
 git add schema.sql teiko/ load_data.py tests/test_loading.py
@@ -569,7 +569,7 @@ git push origin main
 **Decisions this task forces:**
 - **[ASK]** Whether `outputs/summary_table.csv` rounds `percentage` to 4 decimal places on write. The spec says 4. Confirm before writing 52,500 rows, since the file is committed and the choice shows in the diff.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_frequencies.py`:
 
@@ -637,13 +637,13 @@ def test_every_sample_percentages_sum_to_one_hundred(real_db):
     assert totals.max() == pytest.approx(100.0)
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `python -m pytest tests/test_frequencies.py -v`
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'teiko.frequencies'`.
 
-- [ ] **Step 3: Write `teiko/frequencies.py`**
+- [x] **Step 3: Write `teiko/frequencies.py`**
 
 ```python
 """Part 2: relative frequency of each population in each sample."""
@@ -664,13 +664,13 @@ def summary_table(conn: sqlite3.Connection) -> pd.DataFrame:
     return pd.read_sql_query(SUMMARY_QUERY, conn)
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `python -m pytest tests/test_frequencies.py -v`
 
 Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add teiko/frequencies.py tests/test_frequencies.py
@@ -700,7 +700,7 @@ git push origin main
 - **[LOG]** Implement Benjamini-Hochberg by hand or call `scipy.stats.false_discovery_control`. Recommend by hand: it is seven lines, it makes test 7 meaningful, and it avoids depending on a scipy version floor.
 - **[ASK]** Whether `compare_responders` reports the Welch t-test p-value as a column. The spec says yes, as evidence the conclusion does not depend on the test. Confirm, since it adds a column to a committed output file.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_statistics.py`:
 
@@ -789,13 +789,13 @@ def test_cd4_is_the_trap_and_correction_defuses_it(real_db):
     assert cd4["q_value"] > 0.05
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `python -m pytest tests/test_statistics.py -v`
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'teiko.statistics'`.
 
-- [ ] **Step 3: Write `teiko/statistics.py`**
+- [x] **Step 3: Write `teiko/statistics.py`**
 
 ```python
 """Part 3: compare responders against non-responders.
@@ -997,7 +997,7 @@ def compare_by_timepoint(conn: sqlite3.Connection) -> pd.DataFrame:
     return pd.concat(blocks, ignore_index=True)
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `python -m pytest tests/test_statistics.py -v`
 
@@ -1005,7 +1005,7 @@ Expected: PASS, 6 tests.
 
 If `test_no_population_is_significant_in_the_real_cohort` fails, do not adjust the assertion. Print the table and compare against spec section 8, which lists the verified values: cd4_t_cell p = 0.0133 and q = 0.0667, and the largest Cliff's delta anywhere is 0.110.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add teiko/statistics.py tests/test_statistics.py
@@ -1030,7 +1030,7 @@ git push origin main
 **Decisions this task forces:**
 - **[LOG]** Whether the figures annotate each panel with its q-value. Recommend yes for the main figure: a boxplot showing two near-identical distributions is more convincing with the number printed on it.
 
-- [ ] **Step 1: Write the failing smoke test**
+- [x] **Step 1: Write the failing smoke test**
 
 Append to `tests/test_statistics.py`:
 
@@ -1045,13 +1045,13 @@ def test_both_figures_render_with_five_panels(real_db):
     assert len(faceted.axes) == 15  # five populations by three timepoints
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `python -m pytest tests/test_statistics.py::test_both_figures_render_with_five_panels -v`
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'teiko.plots'`.
 
-- [ ] **Step 3: Write `teiko/plots.py`**
+- [x] **Step 3: Write `teiko/plots.py`**
 
 ```python
 """Boxplots for Part 3."""
@@ -1144,13 +1144,13 @@ def timepoint_boxplots(conn: sqlite3.Connection) -> plt.Figure:
     return fig
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 Run: `python -m pytest tests/test_statistics.py -v`
 
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add teiko/plots.py tests/test_statistics.py
@@ -1175,7 +1175,7 @@ git push origin main
 **Decisions this task forces:**
 - **[LOG]** How to make `prj2` appear with a count of zero. Recommend a `LEFT JOIN` from `projects`, so the zero comes from the database rather than being patched in afterwards.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_subsets.py`:
 
@@ -1237,13 +1237,13 @@ def test_cohort_b_drops_the_pbmc_and_miraclib_filters(real_db):
     assert round(mean, 2) == 10206.15
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `python -m pytest tests/test_subsets.py -v`
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'teiko.subsets'`.
 
-- [ ] **Step 3: Write `teiko/subsets.py`**
+- [x] **Step 3: Write `teiko/subsets.py`**
 
 ```python
 """Part 4: cohort subsets.
@@ -1333,13 +1333,13 @@ def melanoma_male_baseline_b_cell_mean(conn: sqlite3.Connection) -> tuple[int, f
     return int(row["n"]), float(row["mean_b_cell"])
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `python -m pytest tests/test_subsets.py -v`
 
 Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add teiko/subsets.py tests/test_subsets.py
@@ -1361,7 +1361,7 @@ git push origin main
 **Decisions this task forces:**
 - **[ASK]** `outputs/summary_table.csv` is 52,500 rows and roughly 2 MB, and it is committed. Confirm that is wanted, or whether to commit a sample and generate the full file at run time.
 
-- [ ] **Step 1: Write `run_pipeline.py`**
+- [x] **Step 1: Write `run_pipeline.py`**
 
 ```python
 """Run Parts 2 to 4 and write everything into outputs/.
@@ -1463,26 +1463,26 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run the full pipeline the way the grader will**
+- [x] **Step 2: Run the full pipeline the way the grader will**
 
 Run: `rm -f teiko.db && make pipeline`
 
 Expected: the loader summary from Task 2, then eight output lines ending with
 `Cohort B average B cell count: 10206.15 over 485 samples`.
 
-- [ ] **Step 3: Confirm every output file exists**
+- [x] **Step 3: Confirm every output file exists**
 
 Run: `ls -la outputs/`
 
 Expected: eight files plus `.gitkeep`.
 
-- [ ] **Step 4: Run the whole test suite**
+- [x] **Step 4: Run the whole test suite**
 
 Run: `make test`
 
 Expected: PASS, 14 tests.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add run_pipeline.py outputs/
@@ -1504,7 +1504,7 @@ git push origin main
 **Decisions this task forces:**
 - **[ASK]** Whether the Response Analysis tab lets the user change the cohort away from melanoma / miraclib / PBMC. Generalised dropdowns make it a real tool; fixed values keep it exactly on the brief. Recommend generalised with those as defaults.
 
-- [ ] **Step 1: Write `app.py`**
+- [x] **Step 1: Write `app.py`**
 
 ```python
 """Interactive dashboard for the Loblaw Bio immune cell analysis."""
@@ -1657,7 +1657,7 @@ with subsets:
     right.metric("Average B cell count", f"{mean_b:.2f}")
 ```
 
-- [ ] **Step 2: Start it and check every tab**
+- [x] **Step 2: Start it and check every tab**
 
 Run: `make dashboard`
 
@@ -1665,7 +1665,7 @@ Open the local URL. Confirm each of the four tabs renders, the filters on the
 Frequencies tab change the row count, and the Response tab shows the
 no-significant-difference message rather than a blank panel.
 
-- [ ] **Step 3: Confirm the bootstrap path works**
+- [x] **Step 3: Confirm the bootstrap path works**
 
 Run: `rm -f teiko.db && make dashboard`
 
@@ -1673,7 +1673,7 @@ Expected: the app builds the database on first load and renders normally. This
 is the path Streamlit Cloud takes. Then run `make pipeline` to restore the
 database.
 
-- [ ] **Step 4: Commit and push**
+- [x] **Step 4: Commit and push**
 
 ```bash
 git add app.py
@@ -1693,21 +1693,21 @@ git push origin main
 
 **Decisions this task forces:** none.
 
-- [ ] **Step 1: Deploy**
+- [x] **Step 1: Deploy**
 
 Go to `share.streamlit.io`, sign in with GitHub, and create a new app from
 `HardikLad10/teiko-immune-analysis`, branch `main`, main file path `app.py`.
 
-- [ ] **Step 2: Watch the build log**
+- [x] **Step 2: Watch the build log**
 
 Confirm the dependencies install and the app reaches "Your app is live".
 
-- [ ] **Step 3: Open the public URL and check all four tabs**
+- [x] **Step 3: Open the public URL and check all four tabs**
 
 The first load builds the database from the CSV and will take a few seconds.
 Confirm the Response tab shows the statistics table, not an error.
 
-- [ ] **Step 4: Record the URL**
+- [x] **Step 4: Record the URL**
 
 Paste it into the chat so it goes into the README in Task 10. Nothing to commit
 in this task.
